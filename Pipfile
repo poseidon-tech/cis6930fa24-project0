@@ -8,6 +8,7 @@ requests = "*"
 pypdf2 = "*"
 argparse = "*"
 pandas = "*"
+pytest = "*"
 
 [dev-packages]
 

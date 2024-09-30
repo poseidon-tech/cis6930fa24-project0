@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-# Example main.py
 import argparse
 import requests
 import PyPDF2
@@ -9,101 +7,119 @@ import pandas as pd
 import os
 
 def main(url):
-    # Download data
-    fetchincidents(url)
-    incidents = extractincidents()
-    #db = createdb()
-    #populatedb(db, incidents)	
-    # Print incident counts
-    #status(db)
 
-def fetchincidents(url):
+    fetch_incidents(url)
+    incidents = extract_incidents()
+    db = create_db()
+    populate_db(db, incidents)
+    status(db)
+
+def fetch_incidents(url):
+
     response = requests.get(url)
-    with open("./resources/data.pdf","wb") as file:
+    with open("./resources/data.pdf", "wb") as file:
         file.write(response.content)
 
-def createdb():
-    if os.path.exists("./resources/normanpd.db"):
-        os.remove("./resources/normanpd.db")
-    con = sqlite3.connect("./resources/normanpd.db")
+def create_db():
+
+    db_path = "./resources/normanpd.db"
+    if os.path.exists(db_path):
+        os.remove(db_path)
+    
+    con = sqlite3.connect(db_path)
     cur = con.cursor()
-    cur.execute("CREATE TABLE incidents (incident_time TEXT,incident_number TEXT,incident_location TEXT,nature TEXT,incident_ori TEXT)")
+    cur.execute("""
+        CREATE TABLE incidents (
+            incident_time TEXT,
+            incident_number TEXT,
+            incident_location TEXT,
+            incident_nature TEXT,
+            incident_ori TEXT
+        )
+    """)
     con.commit()
     return con
 
-def extractincidents():
+def extract_incidents():
+
     data = []
-    with open("./resources/data.pdf","rb") as file:
+    pdf_path = "./resources/data.pdf"
+    
+    with open(pdf_path, "rb") as file:
         reader = PyPDF2.PdfReader(file)
-        pattern = r'\d{4}-\d{8}'
+        incident_pattern = r'\d{4}-\d{8}'
         location_pattern = r'([A-Z0-9_,\.;#\'<>&\(\) /-]*) ([\w /]*)'
-    # Extract text from each page
-        for index,page in enumerate(reader.pages):
+        
+        for index, page in enumerate(reader.pages):
             text = page.extract_text()
-            edge = False
-            if text:  # Ensure there's text to process
-                lines = text.split('\n')
-                if(index==0):
-                    lines = lines[1:]
-                for index,line in enumerate(lines):
-                    if(edge):
-                        edge=False
-                        continue
-                    if line.startswith("Daily"):
-                        continue
-                    if "NORMAN POLICE DEPARTMENT" in line:
-                        line = line.replace("NORMAN POLICE DEPARTMENT","")
-                    match = re.search(pattern,line)
-                    incident_number = ""
-                    if(match):
-                        incident_number = match.group()
-                    line = line.split(" ")
-                    if(len(line) ==2):
-                        continue
-                    if(index<(len(lines)-2)):
-                        nextline = lines[index+1].split(" ")
-                        if(len(nextline)<7 and  len(nextline)>2):
-                            print(lines[index+1])
-                            line = line+nextline
-                            edge =True
-                            
-                    date_time = " ".join(line[0:2])
-                    combi = " ".join(line[3:len(line)-1])
-                    incident_ori = line[len(line)-1]
-                    match = re.search(location_pattern,combi)
-                    address =""
-                    incident = ""
-                    if match:
-                        address = match.group(1)
-                        incident = match.group(2)
-                    # regex code to identify location and nature
-                    data.append([date_time,incident_number,address,incident,incident_ori])# Store each line for CSV
+            if not text:
+                continue       
+            lines = text.split('\n')[1:] if index == 0 else text.split('\n')
+            data.extend(parse_lines(lines, incident_pattern, location_pattern))
+    
+    return pd.DataFrame(data, columns=["incident_time", "incident_number", "incident_location", "incident_nature", "incident_ori"])
 
-    # Create a DataFrame and save as CSV
-    df = pd.DataFrame(data)
-    csv_file_path = './resources/output.csv'
-    df.to_csv(csv_file_path, index=False, header =False)
-    return df
+def parse_lines(lines, incident_pattern, location_pattern):
+    
+    data = []
+    skip_next = False   
+    for index, line in enumerate(lines):
+        if skip_next:
+            skip_next = False
+            continue       
+        if skip_text(line):
+            continue       
+        incident_number = extract_incident_number(line, incident_pattern)
+        list_words = process_multiline(lines, line, index)      
+        date_time = " ".join(list_words[0:2])
+        combined_info = " ".join(list_words[3:-1])
+        incident_ori = list_words[-1]       
+        match = re.search(location_pattern, combined_info)
+        if match:
+            address = match.group(1)
+            incident_nature = match.group(2)
+            data.append([date_time, incident_number, address, incident_nature, incident_ori])   
+    return data
 
-def populatedb(db,incidents):
+def skip_text(line):
+
+    return line.startswith("Daily") or "NORMAN POLICE DEPARTMENT" in line
+
+def extract_incident_number(line, pattern):
+    
+    match = re.search(pattern, line)
+    return match.group() if match else ""
+
+def process_multiline(lines, line, index):
+
+    list_words = line.split(" ")
+    
+    if len(list_words) == 2:
+        return list_words  # Malformed line, skip further processing
+    
+    if index < len(lines) - 2:
+        next_line = lines[index + 1].split(" ")
+        if len(next_line) < 7 and len(next_line) > 2:
+            list_words += next_line  # Merge the next line into the current one
+    
+    return list_words
+
+def populate_db(db, incidents):
+ 
     incidents.to_sql('incidents', db, if_exists='replace', index=False)
 
-
 def status(db):
+ 
     cur = db.cursor()
-    # Execute the SELECT statement to retrieve all rows from the 'incidents' table
-    cur.execute("SELECT * FROM incidents")
+    cur.execute("SELECT incident_nature, COUNT(*) FROM incidents GROUP BY incident_nature ORDER BY incident_nature ASC")
     rows = cur.fetchall()
     db.close()
+    
     for row in rows:
-        print(row)
-
+        print(f"{row[0]} | {row[1]}")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--incidents", type=str, required=True, 
-                         help="Incident summary url.")
-     
+    parser.add_argument("--incidents", type=str, required=True, help="Incident summary URL.")
     args = parser.parse_args()
-    if args.incidents:
-        main(args.incidents)
+    main(args.incidents)
