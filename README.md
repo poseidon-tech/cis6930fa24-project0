@@ -42,6 +42,7 @@ pipenv run pytest
 
 ## Demo video
 
+[watch](https://github.com/user-attachments/assets/1f953741-2846-47ea-8fd6-b4bb01a6d4bd)
 
 
 
