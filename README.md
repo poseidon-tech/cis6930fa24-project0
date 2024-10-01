@@ -131,7 +131,7 @@ Checks whether the printed output matches expected values .
 
 ## Bugs and Assumptions
 
-- Calling the API after page 52 returns empty items. Similarly, page 999 also returns empty items. Pages above 1000 result in a timeout error or CAPTCHA. It is suspected that there is rate limiting for API calls above page 999.
-- Data on FBI pages changes daily, so testing with an old downloaded file may result in errors.
+- There are some Assumptions I made based on data I observed in couple of pdf files, If pdf structure consistency changes then require adjustments to the extraction logic.
+- Data on Norman Police page changes daily, so testing with an old downloaded file may result in errors.
 - Calling API too frequently results in temporary ban of client.
 - Users running this code may encounter errors if there are compatibility issues with the installed dependencies.
