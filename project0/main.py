@@ -1,6 +1,6 @@
 import argparse
-import requests
-import PyPDF2
+import urllib.request
+import pypdf
 import re
 import sqlite3
 import pandas as pd
@@ -8,17 +8,20 @@ import os
 
 def main(url):
 
-    fetch_incidents(url)
-    incidents = extract_incidents()
-    db = create_db()
-    populate_db(db, incidents)
-    status(db)
-
+    stats,pdf = fetch_incidents(url)
+    if stats == 200:
+        incidents = extract_incidents(pdf)
+        db = create_db()
+        populate_db(db, incidents)
+        status(db)
+    else:
+        print("Unable to fetch data")
 def fetch_incidents(url):
-
-    response = requests.get(url)
+    
+    response = urllib.request.urlopen(url)
     with open("./resources/data.pdf", "wb") as file:
-        file.write(response.content)
+        file.write(response.read())
+    return response.getcode(),"./resources/data.pdf"
 
 def create_db():
 
@@ -34,31 +37,30 @@ def create_db():
             incident_number TEXT,
             incident_location TEXT,
             incident_nature TEXT,
-            incident_ori TEXT
+                incident_ori TEXT
         )
     """)
     con.commit()
     return con
 
-def extract_incidents():
+def extract_incidents(pdf_path):
 
     data = []
-    pdf_path = "./resources/data.pdf"
+
     
     with open(pdf_path, "rb") as file:
-        reader = PyPDF2.PdfReader(file)
+        reader = pypdf.PdfReader(file)
         incident_pattern = r'\d{4}-\d{8}'
-        location_pattern = r'([A-Z0-9_,\.;#\'<>&\(\) /-]*) ([\w /]*)'
-        
+        location_pattern = r'([A-Z0-9_,\.;#\'<>&\(\) /-]*) ([\w /]*)'    
         for index, page in enumerate(reader.pages):
             text = page.extract_text()
             if not text:
                 continue       
             lines = text.split('\n')[1:] if index == 0 else text.split('\n')
             data.extend(parse_lines(lines, incident_pattern, location_pattern))
-    
-    return pd.DataFrame(data, columns=["incident_time", "incident_number", "incident_location", "incident_nature", "incident_ori"])
+        return pd.DataFrame(data, columns=["incident_time", "incident_number", "incident_location", "incident_nature", "incident_ori"])
 
+    
 def parse_lines(lines, incident_pattern, location_pattern):
     
     data = []
@@ -69,7 +71,11 @@ def parse_lines(lines, incident_pattern, location_pattern):
             continue       
         if skip_text(line):
             continue       
-        incident_number = extract_incident_number(line, incident_pattern)
+        incident_number = ""
+        match = re.search(incident_pattern, line)
+        if match:
+            match.group()
+            
         list_words = process_multiline(lines, line, index)      
         date_time = " ".join(list_words[0:2])
         combined_info = " ".join(list_words[3:-1])
@@ -85,10 +91,6 @@ def skip_text(line):
 
     return line.startswith("Daily") or "NORMAN POLICE DEPARTMENT" in line
 
-def extract_incident_number(line, pattern):
-    
-    match = re.search(pattern, line)
-    return match.group() if match else ""
 
 def process_multiline(lines, line, index):
 

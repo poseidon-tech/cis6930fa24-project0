@@ -38,3 +38,98 @@ or
 ```bash
 pipenv run pytest
 ```
+
+
+## Demo video
+![Demo Video](https://raw.githubusercontent.com/poseidon-tech/img/9143389794bce21877e7ba226588c332c0cf118a/C__Windows_System32_cmd.exe%202024-10-01%2001-52-49.mp4)
+
+
+## Folder Structure
+```
+|   COLLABORATORS.md
+|   Pipfile
+|   Pipfile.lock
+|   README.md
+|   setup.cfg
+|   setup.py
+|
++---project0
+|       main.py
+|
++---resources
+|       test_data.pdf
+|
+\---tests
+        test_main.py
+```
+
+- **COLLABORATORS.md:** Contains information about collaborators and a list of resources used for the assignment.
+- **main.py:** This is the main python file where the business logic resides, it Processes command-line arguments to either fetch Incidents data from the URL provided by user.
+- **Pipfile:** Manages the Python virtual environment and lists all dependencies.
+- **Pipfile.lock:** Specifies the versions of dependencies to ensure consistent environments.
+- **README.md:** This file, which documents the assignment.
+- **setup.cfg** and **setup.py:** Used for setting up the Python environment.
+- **docs:** Contains documentation for the assignment.
+- **LICENSE:** Contains licensing information, including copyright, publishing, and usage rights.
+- **Resources:** Stores data files, including `test_data.pdf`, which is a sample pdf for testing.
+- **tests:** Contains test files. `test_main.py` is used for testing the main Python file.
+
+## `main.py`
+
+**Functions in `main.py`:**
+
+### `main(url)`
+This function manages the complete workflow by retrieving incident data from the given URL, extracting the relevant incidents, creating a database, populating it, and displaying the status.
+
+
+### `fetch_incidents(url)`
+This function takes a URL as an argument, calls the Norman police API to retrieve the pdf and saves it in resources folder, and returns the the name of pdf file as well as status code.
+
+### `create_db()`
+This function creates database and save the database as normanpd.db in resources folder. It also creates empty table with Incident schema (Date/Time, Incident Number, Location
+, Nature
+, Incident ORI)
+
+### `extract_incidents(pdf_path)`
+This function takes name of pdf file as input argument. It cleans the data and extracts the incident information into a data frame, It returns the data frame
+
+### `parse_lines(lines, incident_pattern, location_pattern)`
+This is a helper function for `extract_incident(pdf_path)` ,It calls other functions to clean the data and returns the extracted data in a list format to the called function.
+
+### `skip_text(line)`
+This is a helper funtion for `parse_lines(lines, incident_pattern, location_pattern)` used to skip unwanted lines that contains text such "Daily incident summary" or "Norman Police Department".
+
+### `process_multiline(lines, line, index):`
+This is a helper funtion for `parse_lines(lines, incident_pattern, location_pattern)` used to solve the edge case when a single incident data lies in two rows.
+
+### `status(db)`
+The `status(db)` function outputs to standard output a list of incident types and their corresponding occurrence counts. The list is sorted alphabetically and case-sensitively by the incident type
+
+## `test_main.py`
+
+**Functions in `test_main.py`:**
+
+### `test_fetch_incidents()`
+Tests whether the PDF is downloaded successfully and is not empty.
+
+### `test_extract_incidents()`
+Tests whether incidents are extracted correctly into a Pandas DataFrame. It checks for the datatype and length of data frame.
+
+### `test_skip_text()`
+Tests whether unwanted lines are skipped or not.
+
+### `test_create_db()`
+Tests whether the daatabase is created and also tests for creation empty incidents table.
+
+### `test_populate_db()`
+Tests whether the database is populated with incident data.
+
+### `test_status_output()`
+Checks whether the printed output matches expected values .
+
+## Bugs and Assumptions
+
+- Calling the API after page 52 returns empty items. Similarly, page 999 also returns empty items. Pages above 1000 result in a timeout error or CAPTCHA. It is suspected that there is rate limiting for API calls above page 999.
+- Data on FBI pages changes daily, so testing with an old downloaded file may result in errors.
+- Calling API too frequently results in temporary ban of client.
+- Users running this code may encounter errors if there are compatibility issues with the installed dependencies.
