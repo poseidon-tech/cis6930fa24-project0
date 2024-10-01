@@ -4,7 +4,8 @@
 
 ## Project Description
 
-The aim of this project is to extract incident data from a PDF file provided by the Norman Police Department, process the extracted information, store it in a SQLite database, and print a status summary of incidents by nature.
+- The aim of this project is to extract incident data from a PDF file provided by the Norman Police Department, process the extracted information, store it in a SQLite database, and print a status summary of incidents by nature in Ascending order.
+- The following fields will be extracted and stored in database - `Date / Time` `Incident Number` `Location` `Nature` `Incident ORI`
 
 ## How to Install
 
@@ -49,6 +50,7 @@ pipenv run pytest
 ## Folder Structure
 ```
 |   COLLABORATORS.md
+|   LICENSE
 |   Pipfile
 |   Pipfile.lock
 |   README.md
@@ -83,55 +85,54 @@ pipenv run pytest
 ### `main(url)`
 This function manages the complete workflow by retrieving incident data from the given URL, extracting the relevant incidents, creating a database, populating it, and displaying the status.
 
-
 ### `fetch_incidents(url)`
-This function takes a URL as an argument, calls the Norman police API to retrieve the pdf and saves it in resources folder, and returns the the name of pdf file as well as status code.
+This function takes a URL as an argument, calls the Norman Police API to retrieve the PDF, saves it in the resources folder, and returns the name of the PDF file along with the status code.
 
 ### `create_db()`
-This function creates database and save the database as normanpd.db in resources folder. It also creates empty table with Incident schema (Date/Time, Incident Number, Location
-, Nature
-, Incident ORI)
+This function creates a database and saves it as `normanpd.db` in the resources folder. It also creates an empty table with the Incident schema (Date/Time, Incident Number, Location, Nature, Incident ORI).
 
 ### `extract_incidents(pdf_path)`
-This function takes name of pdf file as input argument. It cleans the data and extracts the incident information into a data frame, It returns the data frame
+This function takes the name of the PDF file as an input argument, cleans the data, and extracts the incident information into a DataFrame. It returns the DataFrame.
 
 ### `parse_lines(lines, incident_pattern, location_pattern)`
-This is a helper function for `extract_incident(pdf_path)` ,It calls other functions to clean the data and returns the extracted data in a list format to the called function.
+This is a helper function for `extract_incidents(pdf_path)`. It calls other functions to clean the data and returns the extracted data in a list format to the calling function.
 
 ### `skip_text(line)`
-This is a helper funtion for `parse_lines(lines, incident_pattern, location_pattern)` used to skip unwanted lines that contains text such "Daily incident summary" or "Norman Police Department".
+This is a helper function for `parse_lines(lines, incident_pattern, location_pattern)` used to skip unwanted lines that contain text such as "Daily incident summary" or "Norman Police Department."
 
-### `process_multiline(lines, line, index):`
-This is a helper funtion for `parse_lines(lines, incident_pattern, location_pattern)` used to solve the edge case when a single incident data lies in two rows.
+### `process_multiline(lines, line, index)`
+This is a helper function for `parse_lines(lines, incident_pattern, location_pattern)`, used to handle edge cases where a single incident's data spans multiple rows.
 
 ### `status(db)`
-The `status(db)` function outputs to standard output a list of incident types and their corresponding occurrence counts. The list is sorted alphabetically and case-sensitively by the incident type
+The `status(db)` function outputs a list of incident types and their corresponding occurrence counts to the standard output. The list is sorted alphabetically and case-sensitively by incident type.
 
 ## `test_main.py`
 
 **Functions in `test_main.py`:**
 
 ### `test_fetch_incidents()`
-Tests whether the PDF is downloaded successfully and is not empty.
+Tests whether the PDF is downloaded successfully by passing the URL to `fetch_incidents(url)` and checking the status code.
 
 ### `test_extract_incidents()`
-Tests whether incidents are extracted correctly into a Pandas DataFrame. It checks for the datatype and length of data frame.
+Tests whether incidents are extracted correctly into a Pandas DataFrame. It checks the datatype and length of the DataFrame.
 
 ### `test_skip_text()`
-Tests whether unwanted lines are skipped or not.
+Tests whether unwanted lines starting with "Daily" or "NORMAN" are skipped.
 
 ### `test_create_db()`
-Tests whether the daatabase is created and also tests for creation empty incidents table.
+Tests whether the database is created and also checks for the creation of an empty incidents table.
 
 ### `test_populate_db()`
 Tests whether the database is populated with incident data.
 
 ### `test_status_output()`
-Checks whether the printed output matches expected values .
+Checks whether the printed output matches the expected values.
+
 
 ## Bugs and Assumptions
 
-- There are some Assumptions I made based on data I observed in couple of pdf files, If pdf structure consistency changes then require adjustments to the extraction logic.
-- Data on Norman Police page changes daily, so testing with an old downloaded file may result in errors.
-- Calling API too frequently results in temporary ban of client.
-- Users running this code may encounter errors if there are compatibility issues with the installed dependencies.
+- Some assumptions were made based on the data observed in a couple of PDF files. If the PDF structure changes, adjustments to the extraction logic will be required.
+- Based on observations from the PDF, locations are capitalized. If a location contains lowercase characters, the program may not behave as expected.
+- The data on the Norman Police page changes daily, so testing with an older downloaded file may result in errors.
+- Calling the API too frequently can result in a temporary ban of the client.
+- Users running this code may encounter errors if there are compatibility issues with the installed dependencies
