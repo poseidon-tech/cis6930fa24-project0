@@ -41,7 +41,8 @@ pipenv run pytest
 
 
 ## Demo video
-![Demo Video](https://raw.githubusercontent.com/poseidon-tech/img/9143389794bce21877e7ba226588c332c0cf118a/C__Windows_System32_cmd.exe%202024-10-01%2001-52-49.mp4)
+
+
 
 
 ## Folder Structure
