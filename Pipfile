@@ -1,0 +1,18 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+argparse = "*"
+pandas = "*"
+pytest = "*"
+pypdf = "*"
+urllib3 = "*"
+pypdf2 = "*"
+requests = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.12"
