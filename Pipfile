@@ -9,8 +9,6 @@ pandas = "*"
 pytest = "*"
 pypdf = "*"
 urllib3 = "*"
-pypdf2 = "*"
-requests = "*"
 
 [dev-packages]
 
