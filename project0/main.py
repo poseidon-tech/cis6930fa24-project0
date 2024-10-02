@@ -45,47 +45,30 @@ def create_db():
     return con
 
 
+
 def extract_incidents(pdf_path):
     data = []
+    reader = pypdf.PdfReader(pdf_path)
+    for page in reader.pages:
+        text = page.extract_text(extraction_mode="layout", layout_mode_space_vertically=False)
+        if text:
+            data.extend(text.split('\n'))
+        else:
+            print("No Text Found")
+    records= parse_lines(data)
+    df = pd.DataFrame(records, columns=["incident_time", "incident_number", "incident_location", "incident_nature", "incident_ori"])
+    return df
 
-    with open(pdf_path, "rb") as file:
-        reader = pypdf.PdfReader(file)
-        incident_pattern = r'\d{4}-\d{8}'
-        location_pattern = r'([A-Z0-9_,\.;#\'<>&\(\) /-]*) ([\w /]*)'
-        for index, page in enumerate(reader.pages):
-            text = page.extract_text()
-            if not text:
-                continue
-            lines = text.split('\n')[1:] if index == 0 else text.split('\n')
-            data.extend(parse_lines(lines, incident_pattern, location_pattern))
-        return pd.DataFrame(data, columns=["incident_time", "incident_number", "incident_location", "incident_nature",
-                                           "incident_ori"])
-
-
-def parse_lines(lines, incident_pattern, location_pattern):
-    data = []
-    skip_next = False
-    for index, line in enumerate(lines):
-        if skip_next:
-            skip_next = False
+def parse_lines(data):
+    new_record = []
+    for i in range(3, len(data) - 1):
+        split_strings = re.split(r'\s{2,}', data[i])
+        if split_strings[0] == '':
             continue
-        if skip_text(line):
-            continue
-        incident_number = ""
-        match = re.search(incident_pattern, line)
-        if match:
-            match.group()
-
-        list_words = process_multiline(lines, line, index)
-        date_time = " ".join(list_words[0:2])
-        combined_info = " ".join(list_words[3:-1])
-        incident_ori = list_words[-1]
-        match = re.search(location_pattern, combined_info)
-        if match:
-            address = match.group(1)
-            incident_nature = match.group(2)
-            data.append([date_time, incident_number, address, incident_nature, incident_ori])
-    return data
+        while len(split_strings) < 5:
+            split_strings.append('')
+        new_record.append(split_strings)
+    return new_record
 
 
 def skip_text(line):
