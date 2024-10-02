@@ -8,6 +8,8 @@ import os
 
 MODE_EXTRACTION = "layout"
 MODE_LAYOUT = False
+START = 3
+END = -1
 
 def main(url):
     stats, pdf = fetch_incidents(url)
@@ -66,13 +68,15 @@ def process_line(input_line):
     cleaned_components = [comp.strip() for comp in components]
     return complete_pattern_s(cleaned_components)
 
-# Function to ensure the list has at least 5 elements
-def complete_pattern_s(pattern_s):
-    return pattern_s + [''] * (5 - len(pattern_s))
 
-# Main function that processes the data
+def complete_pattern_s(pattern_s):
+    missing_count = 5 - len(pattern_s)
+    filled_pattern = pattern_s + [''] * max(missing_count, 0)
+    return filled_pattern
+
+
 def parse_lines(data):
-    return [processed for line in data[3:-1]
+    return [processed for line in data[START:END]
             if (processed := process_line(line)) is not None]
 
 def check_page(page):
