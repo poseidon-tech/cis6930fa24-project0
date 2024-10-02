@@ -6,6 +6,8 @@ import sqlite3
 import pandas as pd
 import os
 
+MODE_EXTRACTION = "layout"
+MODE_LAYOUT = False
 
 def main(url):
     stats, pdf = fetch_incidents(url)
@@ -29,7 +31,6 @@ def create_db():
     db_path = "./resources/normanpd.db"
     if os.path.exists(db_path):
         os.remove(db_path)
-
     con = sqlite3.connect(db_path)
     cur = con.cursor()
     cur.execute("""
@@ -44,32 +45,40 @@ def create_db():
     con.commit()
     return con
 
-
-
-def extract_incidents(pdf_path):
-    data = []
-    reader = pypdf.PdfReader(pdf_path)
-    for page in reader.pages:
-        text = page.extract_text(extraction_mode="layout", layout_mode_space_vertically=False)
-        if text:
-            data.extend(text.split('\n'))
+def extract_incidents(pdf_filepath):
+    gathered_data = []
+    pdf_reader = pypdf.PdfReader(pdf_filepath)
+    for page in pdf_reader.pages:
+        text = page.extract_text(layout_mode_space_vertically=MODE_LAYOUT, extraction_mode=MODE_EXTRACTION)
+        if check_page(page):
+            gathered_data.extend(text.split('\n'))
         else:
             print("No Text Found")
-    records= parse_lines(data)
-    df = pd.DataFrame(records, columns=["incident_time", "incident_number", "incident_location", "incident_nature", "incident_ori"])
+    parsed_records = parse_lines(gathered_data)
+    df = pd.DataFrame(parsed_records, columns=["incident_time", "incident_number", "incident_location", "incident_nature","incident_ori"])
     return df
 
-def parse_lines(data):
-    new_record = []
-    for i in range(3, len(data) - 1):
-        split_strings = re.split(r'\s{2,}', data[i])
-        if split_strings[0] == '':
-            continue
-        while len(split_strings) < 5:
-            split_strings.append('')
-        new_record.append(split_strings)
-    return new_record
 
+def process_line(input_line):
+    components = re.split(r'\s{2,}', input_line)
+    if not components or components[0].strip() == "":
+        return None
+    cleaned_components = [comp.strip() for comp in components]
+    return complete_pattern_s(cleaned_components)
+
+# Function to ensure the list has at least 5 elements
+def complete_pattern_s(pattern_s):
+    return pattern_s + [''] * (5 - len(pattern_s))
+
+# Main function that processes the data
+def parse_lines(data):
+    return [processed for line in data[3:-1]
+            if (processed := process_line(line)) is not None]
+
+def check_page(page):
+    if(page):
+        return True
+    return False
 
 def skip_text(line):
     return line.startswith("Daily") or "NORMAN POLICE DEPARTMENT" in line
