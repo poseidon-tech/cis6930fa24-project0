@@ -3,7 +3,7 @@ import pandas as pd
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'project0')))
-from main import fetch_incidents, extract_incidents, create_db, populate_db, status, skip_text
+from main import fetch_incidents, extract_incidents, create_db, populate_db, status, check_page
 resources_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'resources'))
 db_path = os.path.join(resources_path, 'normanpd.db')
 test_data_path = os.path.join(resources_path, 'test_data.pdf')
@@ -21,10 +21,9 @@ def test_extract_incidents():
     assert isinstance(incidents, pd.DataFrame)  
     assert len(incidents) > 0  
     
-def test_skip_text():
-    
-    assert skip_text("Daily  Incident Summary (Public)") == True
-    assert skip_text("NORMAN POLICE DEPARTMENT") == True
+def test_check_page():
+    assert check_page("Here go sample text") == True
+    assert check_page(None) == False
 
 def test_create_db():
     con = create_db()

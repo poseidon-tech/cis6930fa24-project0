@@ -6,10 +6,9 @@ import sqlite3
 import pandas as pd
 import os
 
+#Global Variables
 MODE_EXTRACTION = "layout"
 MODE_LAYOUT = False
-START = 3
-END = -1
 
 def main(url):
     stats, pdf = fetch_incidents(url)
@@ -38,88 +37,51 @@ def create_db():
     cur = con.cursor()
     cur.execute("""
         CREATE TABLE incidents (
-            incident_time TEXT,
+            time TEXT,
             incident_number TEXT,
-            incident_location TEXT,
-            incident_nature TEXT,
-                incident_ori TEXT
+            location TEXT,
+            nature TEXT,
+                incident_ORI TEXT
         )
     """)
     con.commit()
     return con
 
+
 def extract_incidents(pdf_filepath):
-    gathered_data = []
+    rows = []
     pdf_reader = pypdf.PdfReader(pdf_filepath)
     for page in pdf_reader.pages:
         text = page.extract_text(layout_mode_space_vertically=MODE_LAYOUT, extraction_mode=MODE_EXTRACTION)
-        # print(text)
+        #print(text)
         if check_page(page):
-            gathered_data.extend(text.split('\n'))
+            rows.extend(text.split('\n'))
         else:
             pass
-            # print("No Text Found")
-    result_rows= parse_lines(gathered_data[3:])
-    df = pd.DataFrame(result_rows, columns=["incident_time", "incident_number", "incident_location", "incident_nature","incident_ori"])
+            print("No Text Found")
+    result_data= parse_lines(rows[3:])
+    df = pd.DataFrame(result_data, columns=["Date / Time", "Incident Number", "Location", "Nature","Incident ORI"])
     return df
 
 
 def parse_lines(rows):
-    # Define your regex pattern
-    pattern = r"(\d+/\d+/\d+ \d+:\d+)\s+(\S+)\s+(.+?)\s{2,}(.+?)\s{2,}(\S+)"
+    pattern = r"(\d{1,2}/\d{1,2}/\d{4} \d{1,2}:\d{2})\s+(\S+)\s+(.+?)(?=\s{2,}\S+)\s{2,}(.+?)\s{2,}(\S+)"
+
     parsed_data = []
-    for entry in rows:
-        matches = re.findall(pattern, entry)
+    for row in rows:
+        matches = re.findall(pattern, row)
         if matches:
-            # If there is a match, take the first one
             parsed_data.append(matches[0])
         else:
             pass
-            # Handle the case where no match is found (optional logging or handling)
-            # print(f"No match found for entry: {entry}")
+            # print("No match found")
     return parsed_data
 
-
-
-# def process_line(input_line):
-#     components = re.split(r'\s{2,}', input_line)
-#     if not components or components[0].strip() == "":
-#         return None
-#     cleaned_components = [comp.strip() for comp in components]
-#     return complete_pattern_s(cleaned_components)
-#
-#
-# def complete_pattern_s(pattern_s):
-#     missing_count = 5 - len(pattern_s)
-#     filled_pattern = pattern_s + [''] * max(missing_count, 0)
-#     return filled_pattern
-#
-#
-# def parse_lines(data):
-#     return [processed for line in data[START:END]
-#             if (processed := process_line(line)) is not None]
 
 def check_page(page):
     if(page):
         return True
     return False
-
-def skip_text(line):
-    return line.startswith("Daily") or "NORMAN POLICE DEPARTMENT" in line
-
-
-def process_multiline(lines, line, index):
-    list_words = line.split(" ")
-
-    if len(list_words) == 2:
-        return list_words  # Malformed line, skip further processing
-
-    if index < len(lines) - 2:
-        next_line = lines[index + 1].split(" ")
-        if len(next_line) < 7 and len(next_line) > 2:
-            list_words += next_line  # Merge the next line into the current one
-
-    return list_words
 
 
 def populate_db(db, incidents):
@@ -128,10 +90,9 @@ def populate_db(db, incidents):
 
 def status(db):
     cur = db.cursor()
-    cur.execute("SELECT incident_nature, COUNT(*) FROM incidents GROUP BY incident_nature ORDER BY incident_nature ASC")
+    cur.execute("SELECT nature, COUNT(*) FROM incidents GROUP BY nature ORDER BY nature ASC")
     rows = cur.fetchall()
     db.close()
-
     for row in rows:
         print(f"{row[0]}|{row[1]}")
 

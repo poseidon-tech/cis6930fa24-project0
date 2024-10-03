@@ -91,17 +91,14 @@ This function takes a URL as an argument, calls the Norman Police API to retriev
 ### `create_db()`
 This function creates a database and saves it as `normanpd.db` in the resources folder. It also creates an empty table with the Incident schema (Date/Time, Incident Number, Location, Nature, Incident ORI).
 
-### `extract_incidents(pdf_path)`
+### `extract_incidents(pdf_filepath)`
 This function takes the name of the PDF file as an input argument, cleans the data, and extracts the incident information into a DataFrame. It returns the DataFrame.
 
-### `parse_lines(lines, incident_pattern, location_pattern)`
-This is a helper function for `extract_incidents(pdf_path)`. It calls other functions to clean the data and returns the extracted data in a list format to the calling function.
+### `parse_lines(row)`
+This is a helper function for `extract_incidents(pdf_filepath)`. It uses regex to extract individual fields from string. It returns a list consisting of extracted information.
 
-### `skip_text(line)`
-This is a helper function for `parse_lines(lines, incident_pattern, location_pattern)` used to skip unwanted lines that contain text such as "Daily incident summary" or "Norman Police Department."
-
-### `process_multiline(lines, line, index)`
-This is a helper function for `parse_lines(lines, incident_pattern, location_pattern)`, used to handle edge cases where a single incident's data spans multiple rows.
+### `check_page(page)`
+This is a helper function for `extract_incidents(pdf_filepath)`. It returns True if page is not empty else returns False.
 
 ### `status(db)`
 The `status(db)` function outputs a list of incident types and their corresponding occurrence counts to the standard output. The list is sorted alphabetically and case-sensitively by incident type.
@@ -116,8 +113,8 @@ Tests whether the PDF is downloaded successfully by passing the URL to `fetch_in
 ### `test_extract_incidents()`
 Tests whether incidents are extracted correctly into a Pandas DataFrame. It checks the datatype and length of the DataFrame.
 
-### `test_skip_text()`
-Tests whether unwanted lines starting with "Daily" or "NORMAN" are skipped.
+### `test_check_page()`
+Tests whether `check_page(page)` is returning True when non empty page is passed, otherwise it must return false.
 
 ### `test_create_db()`
 Tests whether the database is created and also checks for the creation of an empty incidents table.
