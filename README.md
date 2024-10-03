@@ -129,7 +129,6 @@ Checks whether the printed output matches the expected values.
 ## Bugs and Assumptions
 
 - Some assumptions were made based on the data observed in a couple of PDF files. If the PDF structure changes, adjustments to the extraction logic will be required.
-- Based on observations from the PDF, locations are capitalized. If a location contains lowercase characters, the program may not behave as expected.
 - The data on the Norman Police page changes daily, so testing with an older downloaded file may result in errors.
 - Calling the API too frequently can result in a temporary ban of the client.
 - Users running this code may encounter errors if there are compatibility issues with the installed dependencies
