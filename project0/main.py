@@ -58,7 +58,7 @@ def extract_incidents(pdf_filepath):
             rows.extend(text.split('\n'))
         else:
             pass
-            print("No Text Found")
+            #print("No Text Found")
     result_data= parse_lines(rows[3:])
     df = pd.DataFrame(result_data, columns=["Date / Time", "Incident Number", "Location", "Nature","Incident ORI"])
     return df
