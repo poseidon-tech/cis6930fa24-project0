@@ -41,9 +41,11 @@ pipenv run pytest
 ```
 
 
-## Demo video
+## Demo Program Execution
 
-[watch](https://github.com/user-attachments/assets/1f953741-2846-47ea-8fd6-b4bb01a6d4bd)
+
+
+[watch](https://github.com/user-attachments/assets/7234bfc3-ca26-486b-b595-b2a59859af4a)
 
 
 
