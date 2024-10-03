@@ -52,32 +52,49 @@ def extract_incidents(pdf_filepath):
     pdf_reader = pypdf.PdfReader(pdf_filepath)
     for page in pdf_reader.pages:
         text = page.extract_text(layout_mode_space_vertically=MODE_LAYOUT, extraction_mode=MODE_EXTRACTION)
+        print(text)
         if check_page(page):
             gathered_data.extend(text.split('\n'))
         else:
             print("No Text Found")
-    parsed_records = parse_lines(gathered_data)
-    df = pd.DataFrame(parsed_records, columns=["incident_time", "incident_number", "incident_location", "incident_nature","incident_ori"])
+    result_rows= parse_lines(gathered_data[3:])
+    df = pd.DataFrame(result_rows, columns=["incident_time", "incident_number", "incident_location", "incident_nature","incident_ori"])
     return df
 
 
-def process_line(input_line):
-    components = re.split(r'\s{2,}', input_line)
-    if not components or components[0].strip() == "":
-        return None
-    cleaned_components = [comp.strip() for comp in components]
-    return complete_pattern_s(cleaned_components)
+def parse_lines(rows):
+    # Define your regex pattern
+    pattern = r"(\d+/\d+/\d+ \d+:\d+)\s+(\S+)\s+(.+?)\s{2,}(.+?)\s{2,}(\S+)"
+    parsed_data = []
+    for entry in rows:
+        matches = re.findall(pattern, entry)
+        if matches:
+            # If there is a match, take the first one
+            parsed_data.append(matches[0])
+        else:
+            # Handle the case where no match is found (optional logging or handling)
+            print(f"No match found for entry: {entry}")
+    return parsed_data
 
 
-def complete_pattern_s(pattern_s):
-    missing_count = 5 - len(pattern_s)
-    filled_pattern = pattern_s + [''] * max(missing_count, 0)
-    return filled_pattern
 
-
-def parse_lines(data):
-    return [processed for line in data[START:END]
-            if (processed := process_line(line)) is not None]
+# def process_line(input_line):
+#     components = re.split(r'\s{2,}', input_line)
+#     if not components or components[0].strip() == "":
+#         return None
+#     cleaned_components = [comp.strip() for comp in components]
+#     return complete_pattern_s(cleaned_components)
+#
+#
+# def complete_pattern_s(pattern_s):
+#     missing_count = 5 - len(pattern_s)
+#     filled_pattern = pattern_s + [''] * max(missing_count, 0)
+#     return filled_pattern
+#
+#
+# def parse_lines(data):
+#     return [processed for line in data[START:END]
+#             if (processed := process_line(line)) is not None]
 
 def check_page(page):
     if(page):
