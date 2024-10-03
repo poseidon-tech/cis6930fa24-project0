@@ -19,7 +19,8 @@ def main(url):
         populate_db(db, incidents)
         status(db)
     else:
-        print("Unable to fetch data")
+        pass
+        # print("Unable to fetch data")
 
 
 def fetch_incidents(url):
@@ -52,11 +53,12 @@ def extract_incidents(pdf_filepath):
     pdf_reader = pypdf.PdfReader(pdf_filepath)
     for page in pdf_reader.pages:
         text = page.extract_text(layout_mode_space_vertically=MODE_LAYOUT, extraction_mode=MODE_EXTRACTION)
-        print(text)
+        # print(text)
         if check_page(page):
             gathered_data.extend(text.split('\n'))
         else:
-            print("No Text Found")
+            pass
+            # print("No Text Found")
     result_rows= parse_lines(gathered_data[3:])
     df = pd.DataFrame(result_rows, columns=["incident_time", "incident_number", "incident_location", "incident_nature","incident_ori"])
     return df
@@ -72,8 +74,9 @@ def parse_lines(rows):
             # If there is a match, take the first one
             parsed_data.append(matches[0])
         else:
+            pass
             # Handle the case where no match is found (optional logging or handling)
-            print(f"No match found for entry: {entry}")
+            # print(f"No match found for entry: {entry}")
     return parsed_data
 
 
