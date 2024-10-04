@@ -4,4 +4,6 @@ Geekforgeeks | https://www.geeksforgeeks.org | Helped me to understand about pyp
 
 StackOverflow | https://stackoverflow.com | Helped me to understand about code modualarity, test cases and sqlite3
 
-Reddit | https://www.reddit.com/ | Help me understand how to document code.
+Reddit | https://www.reddit.com/ | Helped me understand how to document code.
+
+ChatGPT | https://chatgpt.com/ | Helped me learn about the different modes of reading a PDF.
